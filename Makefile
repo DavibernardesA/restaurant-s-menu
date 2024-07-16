@@ -2,6 +2,8 @@ install:
 	pip install Flask
 	pip install psycopg2
 	pip install python-dotenv
+	pip install pytest
+	pip install pytest-flask
 
 clear:
 	uninstall:
