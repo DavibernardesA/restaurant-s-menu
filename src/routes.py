@@ -4,7 +4,6 @@ from src.connection.connection import connect_to_database
 
 app_routes = Blueprint('app_routes', __name__)
 
-# read all
 @app_routes.get('/menu')
 def get_menu():
     conn = connect_to_database()
@@ -27,7 +26,6 @@ def get_menu():
     
     return jsonify(menu_items)
 
-# create
 @app_routes.post('/menu')
 def add_menu_item():
     data = request.get_json()
@@ -60,7 +58,6 @@ def add_menu_item():
         'available': available
     }), 201
 
-# update
 @app_routes.put('/menu/<int:item_id>')
 def update_menu_item(item_id):
     data = request.get_json()
@@ -91,7 +88,6 @@ def update_menu_item(item_id):
         'available': available
     })
 
-# delete
 @app_routes.delete('/menu/<int:item_id>')
 def delete_menu_item(item_id):
     conn = connect_to_database()
