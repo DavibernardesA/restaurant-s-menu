@@ -1,4 +1,3 @@
-# routes.py
 from flask import Blueprint, request, jsonify
 from src.connection.connection import connect_to_database
 
