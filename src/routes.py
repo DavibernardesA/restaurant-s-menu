@@ -1,6 +1,6 @@
 # routes.py
 from flask import Blueprint, request, jsonify
-from connection import connect_to_database
+from src.connection.connection import connect_to_database
 
 app_routes = Blueprint('app_routes', __name__)
 
@@ -10,9 +10,21 @@ def get_menu():
     conn = connect_to_database()
     cur = conn.cursor()
     cur.execute('SELECT * FROM menu ORDER BY id')
-    menu_items = cur.fetchall()
+    rows = cur.fetchall()
     cur.close()
     conn.close()
+    
+    menu_items = []
+    for row in rows:
+        menu_item = {
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'price': row[3],
+            'available': row[4]
+        }
+        menu_items.append(menu_item)
+    
     return jsonify(menu_items)
 
 # create
