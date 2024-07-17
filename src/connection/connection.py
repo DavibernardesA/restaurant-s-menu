@@ -1,4 +1,3 @@
-# connection.py
 import psycopg2
 from psycopg2 import Error
 from dotenv import load_dotenv
@@ -6,11 +5,9 @@ import os
 
 load_dotenv()
 
-db_name = os.getenv('DB_NAME')
-db_user = os.getenv('DB_USER')
-db_pass = os.getenv('DB_PASS')
-db_host = os.getenv('DB_HOST')
-db_port = os.getenv('DB_PORT')
+db_name = os.getenv('POSTGRES_DB')
+db_user = os.getenv('POSTGRES_USER')
+db_pass = os.getenv('POSTGRES_PASSWORD')
 
 def connect_to_database():
     conn = None
@@ -19,8 +16,8 @@ def connect_to_database():
             dbname=db_name,
             user=db_user,
             password=db_pass,
-            host=db_host,
-            port=db_port
+            host="db",
+            port=5432
         )
     except Error as e:
         print(f"Error connecting to PostgreSQL: {e}")
