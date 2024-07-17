@@ -1,0 +1,15 @@
+services:
+  flask:
+    container_name: restaurant_container
+    restart: on-failure
+    tty: true
+    image: restaurant_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "./:/app"
+    env_file:
+      - .env
+    ports:
+      - "3000:80"
