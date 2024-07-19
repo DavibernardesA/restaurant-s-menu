@@ -23,7 +23,7 @@ def add_menu_item():
     new_id = insert_menu_item(name, description, price, available)
 
     return jsonify({
-        'id': new_id,
+        'id': new_id['id'],
         'name': name,
         'description': description,
         'price': price,
@@ -34,22 +34,26 @@ def add_menu_item():
 def update_menu_item(item_id):
     data = request.get_json()
     name = data.get('name')
-    description = data.get('description')
-    price = data.get('price')
-    available = data.get('available')
+    # description = data.get('description')
+    # price = data.get('price')
+    # available = data.get('available')
 
     if not name:
         return jsonify({'message': 'Name not provided for menu item'}), 400
 
-    update_menu_item_in_db(item_id, name, description, price, available)
+    update_menu_item_in_db(item_id, name)
 
-    return jsonify({
-        'id': item_id,
-        'name': name,
-        'description': description,
-        'price': price,
-        'available': available
-    })
+    if(update_menu_item_in_db['status'] == 'success'):
+
+        return jsonify({
+            'id': item_id,
+            'name': name,
+            # 'description': description,
+            # 'price': price,
+            # 'available': available
+        })
+    else:
+        return jsonify({'message': 'Menu item not found'})
 
 @app_routes.delete('/menu/<int:item_id>')
 def delete_menu_item(item_id):

@@ -19,6 +19,16 @@ def connect_to_database():
             host="db",
             port=5432
         )
+
+        cur = conn.cursor()
+#         cur.execute('''
+# alter table menu
+# add column description text,
+# add column price decimal(10, 2),
+# add column available boolean default true;
+#     ''')
+        cur.fetchall()
+        conn.commit()
     except Error as e:
         print(f"Error connecting to PostgreSQL: {e}")
     return conn

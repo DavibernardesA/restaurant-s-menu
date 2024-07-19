@@ -1,3 +1,6 @@
+test:
+	python -m unittest discover
+
 install:
 	pip install Flask
 	pip install psycopg2
