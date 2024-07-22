@@ -1,5 +1,6 @@
-# routes.py
 from flask import Blueprint, request, jsonify
+from pydantic import ValidationError
+from src.models.menu import MenuItem
 from src.services import fetch_menu, insert_menu_item, update_menu_item_in_db, delete_menu_item_from_db
 
 app_routes = Blueprint('app_routes', __name__)
@@ -12,42 +13,36 @@ def get_menu():
 @app_routes.post('/menu')
 def add_menu_item():
     data = request.get_json()
-    name = data.get('name')
-    description = data.get('description')
-    price = data.get('price')
-    available = data.get('available')
-
-    if not name:
-        return jsonify({'message': 'Name not provided for menu item'}), 400
-
-    new_id = insert_menu_item(name, description, price, available)
-
-    return jsonify({
-        'id': new_id['id'],
-        'name': name,
-        'description': description,
-        'price': price,
-        'available': available
-    }), 201
-
-@app_routes.put('/menu/<int:item_id>')
-def update_menu_item(item_id):
-    data = request.get_json()
-    name = data.get('name')
+    try:
+        menu_item = MenuItem(**data)
+    except ValidationError as e:
+        return jsonify(e.erros()), 400
     # description = data.get('description')
     # price = data.get('price')
     # available = data.get('available')
 
-    if not name:
-        return jsonify({'message': 'Name not provided for menu item'}), 400
+    new_item = insert_menu_item(menu_item.name)
 
-    update_menu_item_in_db(item_id, name)
+    return jsonify(new_item), 201
+
+@app_routes.put('/menu/<int:item_id>')
+def update_menu_item(item_id):
+    data = request.get_json()
+    try:
+        menu_item = MenuItem(**data)
+    except ValidationError as e:
+        return jsonify(e.erros()), 400
+    # description = data.get('description')
+    # price = data.get('price')
+    # available = data.get('available')
+
+    update_menu_item_in_db(item_id, menu_item.name)
 
     if(update_menu_item_in_db['status'] == 'success'):
 
         return jsonify({
             'id': item_id,
-            'name': name,
+            'name': menu_item.name,
             # 'description': description,
             # 'price': price,
             # 'available': available
@@ -57,5 +52,8 @@ def update_menu_item(item_id):
 
 @app_routes.delete('/menu/<int:item_id>')
 def delete_menu_item(item_id):
-    delete_menu_item_from_db(item_id)
-    return jsonify({'message': 'Menu item deleted successfully'})
+    try:
+        delete_menu_item_from_db(item_id)
+        return jsonify({'message': 'Menu item deleted successfully'})
+    except Exception:
+        return jsonify({'message': 'Menu item deleted unsuccessfully'})

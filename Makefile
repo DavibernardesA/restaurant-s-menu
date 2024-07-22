@@ -7,6 +7,7 @@ install:
 	pip install python-dotenv
 	pip install pytest
 	pip install pytest-flask
+	pip install pydantic
 
 uninstall:
 	pip uninstall -y Flask

@@ -1,4 +1,6 @@
+from pydantic import ValidationError
 from src.connection.connection import connect_to_database
+from src.models.menu import MenuItem
 
 def fetch_menu():
     conn = connect_to_database()
@@ -18,23 +20,25 @@ def fetch_menu():
     for row in rows:
         menu_item = {
             'id': row[0],
-            'name': row[1],
-            # 'description': row[2],
-            # 'price': row[3],
-            # 'available': row[4]
+            'name': row[1]
         }
         menu_items.append(menu_item)
     
     return menu_items
 
 def insert_menu_item(name):
+    try:
+        menu_item = MenuItem(name=name)
+    except ValidationError as e:
+        return {'status': 'failure', 'message': e.errors()}
+
     conn = connect_to_database()
     cur = conn.cursor()
 
     cur.execute('''
         INSERT INTO menu (name) 
         VALUES (%s) RETURNING id, name
-    ''', (name,))
+    ''', (menu_item.name,))
     
     new_id, new_name = cur.fetchone()
     conn.commit()
@@ -44,6 +48,11 @@ def insert_menu_item(name):
     return {'id': new_id, 'name': new_name}
 
 def update_menu_item_in_db(item_id, name):
+    try:
+        menu_item = MenuItem( name=name)
+    except ValidationError as e:
+        return {'status': 'failure', 'message': e.errors()}
+
     conn = connect_to_database()
     cur = conn.cursor()
 
@@ -55,7 +64,7 @@ def update_menu_item_in_db(item_id, name):
     if item:
         cur.execute('''
             UPDATE menu SET name = %s WHERE id = %s
-        ''', (name, item_id))
+        ''', (menu_item.name, item_id))
         conn.commit()
         cur.close()
         conn.close()
