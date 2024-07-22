@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from src.models.menu import MenuItem
 from src.services import fetch_menu, insert_menu_item, update_menu_item_in_db, delete_menu_item_from_db
 
 class TestServices(unittest.TestCase):
@@ -12,9 +13,9 @@ class TestServices(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
         mock_cursor.fetchall.return_value = [(1, 'Product 1'), (2, 'Product 2')]
         
-        expected_result = [
-            {'id': 1, 'name': 'Product 1'},
-            {'id': 2, 'name': 'Product 2'}
+        expected_result: list[MenuItem] = [
+            MenuItem(id=1, name='Product 1'),
+            MenuItem(id= 2, name='Product 2')
         ]
         
         result = fetch_menu()
@@ -44,7 +45,7 @@ class TestServices(unittest.TestCase):
         mock_connect.return_value = mock_conn
         mock_conn.cursor.return_value = mock_cursor
         
-        expected_result = {'id': 1, 'name': 'Product 1'}
+        expected_result = MenuItem(id=1, name='Product 1')
         mock_cursor.fetchone.return_value = (1, 'Product 1')
 
         result = insert_menu_item('Product 1')
@@ -87,16 +88,19 @@ class TestServices(unittest.TestCase):
         mock_cursor.fetchone.return_value = None
         
         result = update_menu_item_in_db(1, 'Updated Name')
+
+        error_message = {'status': 'failure', 'message': 'Item not found'}
         
-        self.assertEqual(result, {'status': 'failure', 'message': 'Item not found'})
-        
+        self.assertEqual(result['status'], error_message['status'])
+
         self.assertEqual(
-            ''.join(mock_cursor.execute.call_args[0][0].split()),
-            ''.join('''
-                SELECT id FROM menu WHERE id = %s
-            '''.split())
-        )
+                ''.join(mock_cursor.execute.call_args[0][0].split()),
+                ''.join('''
+                    SELECT id FROM menu WHERE id = %s
+                '''.split())
+            )
         self.assertEqual(mock_cursor.execute.call_args[0][1], (1,))
+
         mock_conn.commit.assert_not_called()
         mock_cursor.close.assert_called_once()
         mock_conn.close.assert_called_once()

@@ -1,8 +1,9 @@
+from typing import Union
 from pydantic import ValidationError
 from src.connection.connection import connect_to_database
 from src.models.menu import MenuItem
 
-def fetch_menu():
+def fetch_menu() -> list[MenuItem]:
     conn = connect_to_database()
     cur = conn.cursor()
     try:
@@ -18,63 +19,53 @@ def fetch_menu():
     
     menu_items = []
     for row in rows:
-        menu_item = {
-            'id': row[0],
-            'name': row[1]
-        }
+        menu_item = MenuItem(id=row[0], name=row[1])
         menu_items.append(menu_item)
     
     return menu_items
 
-def insert_menu_item(name):
-    try:
-        menu_item = MenuItem(name=name)
-    except ValidationError as e:
-        return {'status': 'failure', 'message': e.errors()}
-
+def insert_menu_item(name: str) -> MenuItem:
     conn = connect_to_database()
     cur = conn.cursor()
+    new_id, new_name = cur.fetchone()
+    try:
+        menu_item = MenuItem(id=new_id, name=name)
+    except ValidationError as e:
+        return {'status': 'failure', 'message': e.errors()}
 
     cur.execute('''
         INSERT INTO menu (name) 
         VALUES (%s) RETURNING id, name
     ''', (menu_item.name,))
-    
-    new_id, new_name = cur.fetchone()
+
     conn.commit()
     cur.close()
     conn.close()
 
-    return {'id': new_id, 'name': new_name}
+    return MenuItem(id=new_id, name=new_name)
 
-def update_menu_item_in_db(item_id, name):
-    try:
-        menu_item = MenuItem( name=name)
-    except ValidationError as e:
-        return {'status': 'failure', 'message': e.errors()}
-
+def update_menu_item_in_db(item_id: int, name: str) -> dict[str, str]:
     conn = connect_to_database()
     cur = conn.cursor()
 
-    cur.execute('''
-        SELECT id FROM menu WHERE id = %s
-    ''', (item_id,))
-    item = cur.fetchone()
+    try:
+        cur.execute('SELECT id FROM menu WHERE id = %s', (item_id,))
+        item = cur.fetchone()
 
-    if item:
-        cur.execute('''
-            UPDATE menu SET name = %s WHERE id = %s
-        ''', (menu_item.name, item_id))
-        conn.commit()
+        if item:
+            cur.execute('UPDATE menu SET name = %s WHERE id = %s', (name, item_id))
+            conn.commit()
+            return {'status': 'success', 'message': 'Item updated successfully'}
+        else:
+            return {'status': 'failure', 'message': 'Item not found'}
+    except Exception as e:
+        conn.rollback()
+        return {'status': 'failure', 'message': str(e)}
+    finally:
         cur.close()
         conn.close()
-        return {'status': 'success', 'message': 'Item updated successfully'}
-    else:
-        cur.close()
-        conn.close()
-        return {'status': 'failure', 'message': 'Item not found'}
 
-def delete_menu_item_from_db(item_id):
+def delete_menu_item_from_db(item_id: int) -> dict[str, str]:
     conn = connect_to_database()
     cur = conn.cursor()
 
